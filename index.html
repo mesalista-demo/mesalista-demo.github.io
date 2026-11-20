@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MesaLista · Simulador interactivo de actas (prototipo de demostración)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#13315C;--navy2:#0B2545;--teal:#00A6A6;--teal-l:#E0F5F5;--amber:#F2A541;--amber-l:#FDF1DE;--red:#D1495B;--red-l:#FBE7EA;--green:#2A9D5C;--green-l:#E3F4EA;--bg:#F4F6FA;--ink:#1B2333;--muted:#5D6B82;--line:#E2E7EF;--ink-blue:#1a2a8f}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;display:flex;min-height:100vh}
+button{font-family:inherit;cursor:pointer}
+aside{width:230px;background:var(--navy2);color:#C9D6EA;display:flex;flex-direction:column;padding:18px 12px;position:sticky;top:0;height:100vh;flex:none}
+.logo{display:flex;gap:10px;align-items:center;color:#fff;font-weight:800;font-size:18px;padding:0 8px 18px}
+.logo .mk{width:34px;height:34px;border-radius:9px;background:var(--teal);display:grid;place-items:center}
+.logo small{display:block;font-size:10.5px;font-weight:500;opacity:.7}
+aside a{display:flex;gap:10px;align-items:center;color:#C9D6EA;text-decoration:none;padding:10px 12px;border-radius:10px;font-weight:600;font-size:13.5px;margin-bottom:3px}
+aside a:hover{background:rgba(255,255,255,.07)}
+aside a.on{background:var(--teal);color:#fff}
+aside a .bd{margin-left:auto;background:var(--amber);color:var(--navy2);font-size:10px;font-weight:800;border-radius:10px;padding:2px 7px}
+aside .sec{font-size:10px;letter-spacing:1.2px;opacity:.5;padding:14px 12px 6px;font-weight:700}
+aside .me{margin-top:auto;display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.06);border-radius:12px;padding:10px}
+.av{width:32px;height:32px;border-radius:50%;background:var(--amber);color:var(--navy2);display:grid;place-items:center;font-weight:800;font-size:12px;flex:none}
+.wrap{flex:1;min-width:0}
+.top{display:flex;align-items:center;gap:14px;padding:14px 28px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.top h1{font-size:18px;margin:0}
+.top .crumb{color:var(--muted);font-size:12px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;background:var(--teal-l);color:#006B6B;white-space:nowrap}
+.chip.a{background:var(--amber-l);color:#8A5600}.chip.r{background:var(--red-l);color:#9B2335}.chip.g{background:var(--green-l);color:#1E6E41}.chip.n{background:#E6ECF5;color:var(--navy)}
+.live{background:var(--red);color:#fff}
+.live::before{content:"";width:7px;height:7px;border-radius:50%;background:#fff;animation:bl 1s infinite}
+@keyframes bl{50%{opacity:.2}}
+main{padding:22px 28px 60px;max-width:1240px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
+.grid{display:grid;gap:16px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}.g5{grid-template-columns:repeat(5,1fr)}
+h2{font-size:19px;margin:0 0 6px}h3{font-size:15px;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 16px;font-size:13.5px}
+.btn{background:var(--teal);color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13.5px;transition:.15s}
+.btn:hover{filter:brightness(.94)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}.btn.navy{background:var(--navy)}.btn.sm{padding:6px 11px;font-size:12px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.hide{display:none!important}
+.fb{padding:11px 14px;border-radius:10px;font-size:13px;margin-top:12px}
+.fb.ok{background:var(--green-l);color:#1E6E41}.fb.bad{background:var(--red-l);color:#9B2335}.fb.info{background:#E6ECF5;color:var(--navy)}.fb.warn{background:var(--amber-l);color:#7A4B00}
+/* stepper */
+.steps{display:flex;gap:6px;margin-bottom:18px}
+.st{flex:1;display:flex;gap:9px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--muted);font-weight:600}
+.st .n{width:24px;height:24px;border-radius:50%;background:#E6ECF5;color:var(--navy);display:grid;place-items:center;font-weight:800;font-size:12px;flex:none}
+.st.on{border-color:var(--teal);color:var(--ink);box-shadow:0 0 0 3px var(--teal-l)}.st.on .n{background:var(--teal);color:#fff}
+.st.ok{color:var(--green)}.st.ok .n{background:var(--green);color:#fff}
+/* ballots */
+.urn{display:flex;flex-wrap:wrap;gap:8px;min-height:120px;padding:12px;border:2px dashed #C3CDDB;border-radius:14px;background:#FAFBFD}
+.bal{width:86px;height:62px;background:#fff;border:1.5px solid #7C8BA3;border-radius:6px;position:relative;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:2px;padding:3px;cursor:grab;touch-action:none;user-select:none;transition:transform .15s,box-shadow .15s}
+.bal:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(11,37,69,.15)}
+.bal.sel{outline:3px solid var(--teal)}
+.bal i{border:1px solid #C3CDDB;border-radius:3px;font-style:normal;font-size:7px;color:#8A96A8;display:grid;place-items:center;position:relative}
+.bal i.bk{font-weight:800;color:var(--navy);font-size:6.5px}
+.bal .x{position:absolute;color:var(--ink-blue);font:600 22px Caveat,cursive;line-height:1;left:50%;top:50%;transform:translate(-50%,-55%)}
+.bal .xo{position:absolute;color:var(--ink-blue);font:600 24px Caveat,cursive;right:-6px;bottom:-12px}
+.bal.back{background:repeating-linear-gradient(45deg,#E6ECF5,#E6ECF5 6px,#F4F6FA 6px,#F4F6FA 12px);display:grid;place-items:center;grid-template-columns:1fr}
+.bal.back b{font-size:9px;color:var(--navy)}
+.bal.burn{animation:burn 1.2s forwards}
+@keyframes burn{40%{transform:scale(1.15) rotate(-6deg);filter:sepia(1) saturate(4) hue-rotate(-20deg)}100%{transform:scale(.2) rotate(30deg);opacity:0}}
+.dghost{position:fixed;pointer-events:none;z-index:99;transform:rotate(-4deg) scale(1.08);box-shadow:0 12px 26px rgba(11,37,69,.3)}
+.piles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.pile{border:2px solid var(--line);border-radius:12px;padding:10px;min-height:96px;background:#fff;transition:.15s;position:relative}
+.pile.hov{border-color:var(--teal);background:var(--teal-l);transform:scale(1.02)}
+.pile b{font-size:12px;display:block;color:var(--navy)}
+.pile .cnt{position:absolute;top:8px;right:10px;font-size:20px;font-weight:800;color:var(--navy2)}
+.pile .stack{display:flex;margin-top:8px;height:26px}
+.pile .stack span{width:30px;height:22px;border:1px solid #9AA8BD;border-radius:3px;background:#fff;margin-right:-18px;box-shadow:1px 1px 0 #E2E7EF}
+.pile.special{background:#FAFBFD}
+.pile.err{animation:shake .4s;border-color:var(--red)}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+/* acta */
+.acta{background:#FFFEF8;border:1.5px solid #3b4a63;border-radius:6px;font-size:12px;box-shadow:0 2px 0 #e9e4cf}
+.acta .ah{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1.5px solid #3b4a63;background:#F3F0E2}
+.acta .ah b{font-size:15px;letter-spacing:.5px}
+.acta .meta{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1.5px solid #3b4a63}
+.acta .meta div{padding:6px 8px;border-right:1px solid #cfc9b0;font-size:10.5px;color:#5c5640}
+.acta .meta div b{display:block;color:var(--ink);font-size:12px}
+.acta .sh{background:#3b4a63;color:#fff;font-weight:700;font-size:11px;padding:5px 12px;letter-spacing:.6px}
+.fr{display:grid;grid-template-columns:1fr 132px;align-items:center;border-bottom:1px solid #e3ddc4;padding:5px 12px;gap:10px;position:relative}
+.fr label{font-size:12.5px}
+.fr .boxes{display:flex;gap:4px;cursor:text}
+.fr .boxes span{width:38px;height:36px;border:1.5px solid #3b4a63;border-radius:4px;background:#fff;display:grid;place-items:center;font:600 26px Caveat,cursive;color:var(--ink-blue)}
+.fr .boxes span.void{color:#9AA8BD}
+.fr.focus{background:#EAF7F7}.fr.focus .boxes span{border-color:var(--teal)}
+.fr.bad{background:var(--red-l)}.fr.bad .boxes span{border-color:var(--red)}
+.fr.good .boxes span{border-color:var(--green)}
+.fr .tip{position:absolute;right:150px;top:50%;transform:translateY(-50%);background:var(--red);color:#fff;font-size:11px;padding:5px 9px;border-radius:7px;max-width:290px;z-index:2}
+.fr input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.sig{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px}
+.sig div{border-bottom:1.5px solid #3b4a63;height:62px;position:relative;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;font-size:10.5px;color:#5c5640}
+.sig svg{position:absolute;left:10%;top:2px;width:80%;height:44px}
+.sig path{fill:none;stroke:var(--ink-blue);stroke-width:2.2;stroke-linecap:round;stroke-dasharray:400;stroke-dashoffset:400;transition:stroke-dashoffset 1s}
+.sig .done path{stroke-dashoffset:0}
+.side-tools .card{margin-bottom:14px}
+.vrow{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;margin:7px 0}
+.vrow .d{width:18px;height:18px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:11px;color:#fff;background:#C3CDDB}
+.vrow.ok .d{background:var(--green)}.vrow.bad .d{background:var(--red)}
+/* comparison */
+.copies{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.copy{background:#FFFEF8;border:1.5px solid #3b4a63;border-radius:6px;overflow:hidden;transition:.2s}
+.copy .ch{padding:8px 12px;font-weight:800;font-size:12px;color:#fff;letter-spacing:.5px}
+.copy table{width:100%;border-collapse:collapse;font-size:12px}
+.copy td{padding:5px 10px;border-bottom:1px solid #e3ddc4}
+.copy td.v{font:600 22px Caveat,cursive;color:var(--ink-blue);text-align:center;width:70px;cursor:pointer;border-radius:6px}
+.copy td.v:hover{background:var(--amber-l)}
+.copy td.v.found{background:var(--red);color:#fff}
+.copy td.v.miss{animation:shake .4s;background:#EEF2F7}
+.dest{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+.env{border:2px dashed #C3CDDB;border-radius:14px;padding:16px;text-align:center;min-height:120px;transition:.15s;background:#fff}
+.env.hov{border-color:var(--teal);background:var(--teal-l)}
+.env.ok{border-style:solid;border-color:var(--green);background:var(--green-l)}
+.env .ic{font-size:30px}
+.mini{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;color:#fff;font-weight:700;font-size:12.5px;cursor:grab;touch-action:none;user-select:none;margin:4px}
+/* score */
+.ring{width:140px;height:140px;border-radius:50%;display:grid;place-items:center;margin:0 auto}
+.ring span{width:110px;height:110px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:34px;font-weight:800;color:var(--navy2)}
+/* live */
+.stage{position:relative;border-radius:14px;overflow:hidden;background:#0d1626;aspect-ratio:16/9;color:#fff}
+.slide{position:absolute;inset:6% 5% 16% 34%;background:#FFFEF8;border-radius:8px;color:var(--ink);padding:14px;font-size:12px}
+.presenter{position:absolute;left:4%;bottom:16%;width:27%;aspect-ratio:3/4;border-radius:12px;background:linear-gradient(160deg,#2b4a77,#13315C);display:grid;place-items:center;overflow:hidden}
+.presenter .face{width:46%;aspect-ratio:1;border-radius:50%;background:#E8B98C;position:relative;top:-8%}
+.presenter .body{position:absolute;bottom:-18%;width:80%;height:46%;border-radius:50% 50% 0 0;background:var(--teal)}
+.presenter .mouth{position:absolute;width:26%;height:8%;background:#7a3b2a;border-radius:0 0 20px 20px;left:37%;top:66%;animation:talk .35s infinite alternate}
+@keyframes talk{to{height:3%}}
+.stage .bar{position:absolute;left:0;right:0;bottom:0;height:13%;background:rgba(0,0,0,.55);display:flex;align-items:center;gap:12px;padding:0 16px;font-size:12px}
+.stage .prog{flex:1;height:4px;background:rgba(255,255,255,.25);border-radius:4px;overflow:hidden}.stage .prog i{display:block;height:100%;width:40%;background:var(--red)}
+.chat{display:flex;flex-direction:column;height:100%}
+.msgs{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:4px 2px;max-height:330px}
+.m{font-size:12.5px;line-height:1.4;animation:pop .3s}.m b{color:var(--navy)}.m.q{background:var(--amber-l);padding:8px 10px;border-radius:10px}.m.h{background:var(--teal-l);padding:8px 10px;border-radius:10px}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}}
+.poll button{display:block;width:100%;text-align:left;margin:6px 0;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font-size:12.5px;position:relative;overflow:hidden}
+.poll button i{position:absolute;left:0;top:0;bottom:0;background:var(--teal-l);z-index:0;transition:width .6s}
+.poll button span{position:relative}
+.poll button.me{border-color:var(--teal)}
+/* reminders */
+.tl{position:relative;padding-left:26px}
+.tl::before{content:"";position:absolute;left:10px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.ti{position:relative;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;cursor:pointer;transition:.15s}
+.ti::before{content:"";position:absolute;left:-22px;top:16px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--teal)}
+.ti.on{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-l)}
+.ti.sent::before{background:var(--teal)}
+.ti small{color:var(--muted)}
+.phone{width:290px;height:560px;border-radius:40px;background:#0d1626;padding:11px;box-shadow:0 18px 40px rgba(11,37,69,.28);margin:0 auto}
+.scr{height:100%;border-radius:30px;background:#ECE5DD;overflow:hidden;display:flex;flex-direction:column}
+.wa{background:#075E54;color:#fff;padding:12px 14px;font-size:13px;display:flex;gap:10px;align-items:center}
+.wa .av{width:30px;height:30px;font-size:11px;background:var(--teal);color:#fff}
+.wa small{display:block;opacity:.75;font-size:10.5px}
+.thread{flex:1;padding:12px;display:flex;flex-direction:column;gap:8px;overflow:auto}
+.bub{background:#fff;border-radius:10px 10px 10px 2px;padding:9px 11px;font-size:12px;line-height:1.4;max-width:92%;box-shadow:0 1px 1px rgba(0,0,0,.08);animation:pop .35s}
+.bub .meta{font-size:10px;color:#8A96A8;text-align:right;margin-top:4px}
+.bub.sms{background:#E9F1FF}
+.bub .cta{display:block;margin-top:6px;color:#0a7cff;font-weight:700}
+.chan{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px;margin-bottom:4px;color:#fff}
+/* certificate */
+.cert{background:#fff;border:1px solid var(--line);border-radius:16px;padding:34px;position:relative;overflow:hidden}
+.cert::before{content:"";position:absolute;inset:12px;border:2px solid var(--navy);border-radius:10px;pointer-events:none}
+.cert::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:var(--teal-l)}
+.cert>*{position:relative;z-index:1}
+.qr{width:116px;height:116px;display:grid;grid-template-columns:repeat(21,1fr);background:#fff;padding:6px;border:1px solid var(--line)}
+.qr i{background:#fff}.qr i.k{background:var(--navy2)}
+/* dashboard */
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+.kpi span{color:var(--muted);font-size:12px}.kpi b{display:block;font-size:26px;color:var(--navy2);letter-spacing:-.5px;margin:4px 0}
+.kpi em{font-style:normal;font-size:11.5px;font-weight:700;color:var(--green)}.kpi em.dn{color:var(--red)}
+.hb{display:grid;grid-template-columns:170px 1fr 46px;gap:10px;align-items:center;margin:9px 0;font-size:12.5px}
+.hb .tr{height:14px;background:#EEF2F7;border-radius:7px;overflow:hidden}.hb .tr i{display:block;height:100%;border-radius:7px;transition:width .6s}
+.funnel div{white-space:nowrap;margin:6px 0;border-radius:8px;color:#fff;font-size:12px;font-weight:700;padding:9px 12px;display:flex;justify-content:space-between;transition:width .6s}
+table.t{width:100%;border-collapse:collapse;font-size:12.5px}
+table.t th,table.t td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+table.t th{font-size:11px;color:var(--muted);text-transform:uppercase;background:#F7F9FC}
+.sem{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+select.sel{border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-family:inherit;font-size:13px;font-weight:600;color:var(--navy);background:#fff}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy2);color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;opacity:0;transition:.3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:translateX(-50%)}
+</style>
+</head>
+<body>
+<aside>
+  <div class="logo"><div class="mk">✓</div><div>MesaLista<small>Capacitación electoral</small></div></div>
+  <div class="sec">APRENDIZAJE</div>
+  <a href="#simulador" data-v="simulador">📝 Simulador de actas</a>
+  <a href="#envivo" data-v="envivo">🔴 Clases en vivo</a>
+  <a href="#certificado" data-v="certificado">🎓 Certificado de asistencia</a>
+  <div class="sec">GESTIÓN</div>
+  <a href="#recordatorios" data-v="recordatorios">🔔 Recordatorios</a>
+  <a href="#tablero" data-v="tablero">📊 Tablero de control</a>
+  <div style="font-size:10.5px;opacity:.6;padding:0 10px 10px;line-height:1.4">Prototipo de demostración. No es un sitio oficial de la Registraduría Nacional del Estado Civil.</div>
+  <div class="me"><div class="av" id="av">LM</div><div style="font-size:12px"><b style="color:#fff" id="who">Laura Martínez</b><br><span id="whorole">Elaboradora de actas · Mesa 012</span></div></div>
+</aside>
+<div class="wrap">
+<div class="top"><div><div class="crumb" id="crumb">Aprendizaje</div><h1 id="ttl">Simulador interactivo de actas</h1></div>
+  <div style="margin-left:auto" class="row" id="topx"><span class="chip r" title="Prototipo con datos ficticios; no es un sitio oficial">⚠ Prototipo de demostración · Datos ficticios</span><span class="chip a">Elecciones territoriales · 31 oct 2027</span></div></div>
+<main>
+
+<!-- ================= SIMULADOR ================= -->
+<section id="v-simulador">
+  <div class="steps" id="steps"></div>
+
+  <!-- P1 nivelación -->
+  <div id="p1" class="grid g2">
+    <div class="card">
+      <span class="chip n">Paso 1 · Nivelación de la mesa</span>
+      <h2 style="margin-top:10px">Abre la urna y compara con el E-11</h2>
+      <p class="sub">Mesa 012 · Alcaldía de Mitú. Sin mirar las marcas, cuenta las tarjetas y compáralas con el número de votantes registrados en el E-11.</p>
+      <div class="grid g2" style="margin-bottom:14px">
+        <div class="kpi" style="background:#F7F9FC"><span>Votantes en el E-11</span><b id="nE11">12</b></div>
+        <div class="kpi" style="background:#F7F9FC"><span>Tarjetas en la urna</span><b id="nUrna">13</b></div>
+      </div>
+      <div class="row"><button class="btn" id="btnCount" onclick="countUrn()">Contar tarjetas</button><button class="btn navy hide" id="btnLevel" onclick="levelUrn()">🎲 Retirar 1 excedente al azar y destruirlo</button><button class="btn hide" id="btnToSort" onclick="goStep(2)">Clasificar votos →</button></div>
+      <div class="fb info hide" id="fb1"></div>
+    </div>
+    <div class="card">
+      <h3>Urna de la mesa 012</h3>
+      <div class="urn" id="urn1"></div>
+      <p style="font-size:12px;color:var(--muted);margin:10px 0 0">Las tarjetas están boca abajo: el excedente se destruye sin abrir.</p>
+    </div>
+  </div>
+
+  <!-- P2 clasificación -->
+  <div id="p2" class="hide">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div><span class="chip n">Paso 2 · Clasificación y conteo</span><h2 style="margin-top:10px">Arrastra cada tarjeta a su grupo</h2>
+        <p class="sub" style="margin:0">Válido: una sola opción marcada · Blanco: solo la casilla de voto en blanco · Nulo: más de una opción · No marcado: sin marca o marca fuera de las casillas. También puedes hacer clic en la tarjeta y luego en el grupo.</p></div>
+        <div style="text-align:right"><div style="font-size:28px;font-weight:800;color:var(--navy2)"><span id="left">12</span></div><small style="color:var(--muted)">por clasificar</small></div>
+      </div>
+      <div class="urn" id="urn2" style="margin:14px 0"></div>
+      <div class="piles" id="piles"></div>
+      <div class="fb hide" id="fb2"></div>
+      <div class="row" style="margin-top:14px"><button class="btn" id="btnToActa" disabled onclick="goStep(3)">Diligenciar el acta E-14 →</button></div>
+    </div>
+  </div>
+
+  <!-- P3 acta -->
+  <div id="p3" class="hide" style="display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start">
+    <div class="acta" id="acta">
+      <div class="ah"><div><b>ACTA DE ESCRUTINIO DE LOS JURADOS DE VOTACIÓN · E-14</b><br><span style="font-size:11px;color:#5c5640">Formulario de práctica · Ejemplar: CLAVEROS</span></div><span class="chip n">Alcaldía</span></div>
+      <div class="meta"><div>Depto.<b>Vaupés</b></div><div>Municipio<b>Mitú</b></div><div>Zona<b>03</b></div><div>Puesto<b>I.E. San José</b></div><div>Mesa<b>012</b></div><div>Fecha<b>31-10-2027</b></div></div>
+      <div class="sh">NIVELACIÓN DE LA MESA</div>
+      <div id="frN"></div>
+      <div class="sh">VOTOS POR CANDIDATO</div>
+      <div id="frC"></div>
+      <div class="sh">OTROS VOTOS Y TOTAL</div>
+      <div id="frO"></div>
+      <div class="sh">CONSTANCIAS</div>
+      <div style="padding:10px 12px;font-size:12.5px" class="row"><label><input type="checkbox" id="reconteo" onchange="$('#recWho').classList.toggle('hide',!this.checked)"> ¿Algún testigo solicitó reconteo?</label><span id="recWho" class="hide" style="color:var(--muted)">Solicitante: <b>Testigo · Partido Alfa</b> · Resultado: se reconfirma el conteo</span></div>
+      <div class="sh">FIRMAS DE LOS JURADOS</div>
+      <div class="sig" id="sigs"></div>
+      <div class="sh">OBSERVACIONES</div>
+      <div style="padding:10px 12px"><textarea id="obs" rows="3" placeholder="Registre aquí las novedades de la mesa (reconteo, reclamaciones recibidas por escrito, hechos relevantes)…" style="width:100%;border:1.5px solid #3b4a63;border-radius:4px;background:#fff;font:600 20px Caveat,cursive;color:var(--ink-blue);padding:8px 10px;resize:vertical"></textarea></div>
+    </div>
+    <div class="side-tools">
+      <div class="card" id="guide" style="background:var(--teal-l);border-color:#BFE7E7"><span class="chip" style="background:#fff">📘 Guía del E-14</span><h3 id="gT" style="margin:10px 0 6px">Cómo diligenciar el acta</h3><p id="gD" style="font-size:12.5px;margin:0;line-height:1.5">Haz clic en una casilla del acta y aquí verás cómo se llena. Escribe la cifra con letra clara, sin tachones ni enmendaduras.</p></div>
+      <div class="card"><h3>Tus grupos de votos</h3><div id="myCounts" style="font-size:12.5px"></div></div>
+      <div class="card"><h3>Validación en vivo</h3><div id="valids"></div><p style="font-size:11px;color:var(--muted);margin:8px 0 0">Las casillas que no se usan quedan en blanco.</p></div>
+      <button class="btn" style="width:100%" id="btnCheck" onclick="checkActa()">Revisar acta</button>
+      <div class="fb hide" id="fb3"></div>
+      <button class="btn navy hide" style="width:100%;margin-top:10px" id="btnToCmp" onclick="goStep(4)">Ejemplares y transmisión →</button>
+    </div>
+  </div>
+
+  <!-- P4 comparación -->
+  <div id="p4" class="hide">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><div><span class="chip n">Paso 4 · Ejemplares y transmisión</span>
+      <h2 style="margin-top:10px">Encuentra las diferencias entre los 3 ejemplares del E-14</h2>
+      <p class="sub" style="margin:0">Claveros, delegados y transmisión deben coincidir cifra por cifra antes de entregarlos y transmitir. Haz clic en cada casilla que no coincida con el ejemplar de claveros.</p></div>
+      <div style="text-align:right"><div style="font-size:28px;font-weight:800;color:var(--navy2)"><span id="found">0</span>/2</div><small style="color:var(--muted)">diferencias halladas</small></div></div>
+      <div class="copies" id="copies" style="margin-top:16px"></div>
+      <div class="fb hide" id="fb4"></div>
+      <div id="destBox" class="hide">
+        <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:18px;align-items:start">
+          <div><h3>1. Arrastra el ejemplar de claveros a su sobre</h3>
+            <div style="text-align:center" id="minis"></div>
+            <div id="dests" style="margin-top:10px"></div></div>
+          <div><h3>2. Confirma la entrega de los otros ejemplares</h3>
+            <div id="checks"></div></div>
+        </div>
+        <div id="trxBox" class="hide" style="margin-top:18px">
+          <h3>3. Proceso de transmisión del E-14</h3>
+          <p class="sub" style="margin-bottom:10px">El ejemplar de transmisión alimenta el preconteo, que es informativo. Los resultados oficiales salen de los escrutinios, con base en el ejemplar de claveros.</p>
+          <div class="grid g4" id="trx"></div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:14px"><button class="btn hide" id="btnRes" onclick="goStep(5)">Ver mi resultado →</button></div>
+    </div>
+  </div>
+
+  <!-- P5 resultado -->
+  <div id="p5" class="hide">
+    <div class="grid" style="grid-template-columns:320px 1fr">
+      <div class="card" style="text-align:center"><div class="ring" id="ring"><span id="score">0%</span></div><h2 style="margin-top:14px" id="rt"></h2><p class="sub" id="rs"></p>
+        <div class="row" style="justify-content:center"><span class="chip g">✓ Enviado al tablero de control</span></div></div>
+      <div class="card"><h3>Desempeño por competencia</h3><div id="comp"></div>
+        <div class="fb info" id="adapt"></div>
+        <div class="row" style="margin-top:12px"><button class="btn ghost" onclick="resetSim()">↺ Nueva mesa de práctica</button><button class="btn" onclick="go('envivo')">Ir a la clase en vivo →</button></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EN VIVO ================= -->
+<section id="v-envivo" class="hide">
+  <div class="grid" style="grid-template-columns:1fr 330px">
+    <div>
+      <div class="stage">
+        <div class="presenter"><div class="face"><div class="mouth"></div></div><div class="body"></div></div>
+        <div class="slide" id="liveSlide"></div>
+        <div style="position:absolute;left:16px;top:14px" class="row"><span class="chip live">EN VIVO</span><span class="chip n" id="viewers">👁 1.284</span></div>
+        <div class="bar"><span>▶</span><div class="prog"><i id="lp"></i></div><span id="ltime">00:24:10</span><span>CC</span><span>🤟 LSC</span><span>⚙</span></div>
+      </div>
+      <div class="row" style="margin-top:14px;justify-content:space-between">
+        <div><h2 style="margin:0">Diligenciamiento del E-14 sin errores</h2><p class="sub" style="margin:2px 0 0">Facilitadora: Mónica Rojas · Zona Orinoquía-Amazonía · Subtítulos y lengua de señas</p></div>
+        <div class="row"><button class="btn" id="btnAtt" onclick="markAtt()">✋ Registrar asistencia</button></div>
+      </div>
+      <div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Asistencia a la sesión</h3><span id="attTxt" style="font-size:12.5px;color:var(--muted)">Mínimo 45 min para certificar</span></div>
+        <div class="hb" style="grid-template-columns:1fr 60px"><div class="tr"><i id="attBar" style="width:54%;background:var(--teal)"></i></div><b id="attPct">24 min</b></div></div>
+      <div class="grid g3" style="margin-top:14px">
+        <div class="card"><span class="chip n">Próxima · Sáb 23 oct 9:00</span><h3 style="margin-top:8px">Nivelación y casos difíciles</h3><button class="btn ghost sm" onclick="this.textContent='✓ Te recordaremos';toast('Recordatorio programado por WhatsApp')">🔔 Recordarme</button></div>
+        <div class="card"><span class="chip n">Grabación · 42 min</span><h3 style="margin-top:8px">Instalación de mesa y E-11</h3><button class="btn ghost sm" onclick="toast('Reproduciendo grabación (demo)')">▶ Ver</button></div>
+        <div class="card"><span class="chip n">Grabación · 38 min</span><h3 style="margin-top:8px">Reclamaciones y reconteo</h3><button class="btn ghost sm" onclick="toast('Reproduciendo grabación (demo)')">▶ Ver</button></div>
+      </div>
+    </div>
+    <div class="card chat">
+      <div class="row" style="justify-content:space-between"><h3 style="margin:0">Chat de preguntas</h3><span class="chip g">Moderado</span></div>
+      <div class="poll" id="poll" style="margin:10px 0"></div>
+      <div class="msgs" id="msgs"></div>
+      <form id="cf" class="row" style="margin-top:10px;flex-wrap:nowrap"><input id="ci" placeholder="Escribe tu pregunta…" style="flex:1;border:1px solid var(--line);border-radius:10px;padding:10px;font-family:inherit"><button class="btn sm">Enviar</button></form>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CERTIFICADO ================= -->
+<section id="v-certificado" class="hide">
+  <div class="grid" style="grid-template-columns:1fr 320px">
+    <div class="cert">
+      <div class="row" style="justify-content:space-between"><div style="font-size:11px;letter-spacing:2.5px;color:var(--muted);font-weight:700">CERTIFICADO DE ASISTENCIA A LA CAPACITACIÓN · EJEMPLO DE PROTOTIPO</div><span class="chip g" id="certState">Vigente</span></div>
+      <h1 style="font-size:30px;margin:22px 0 4px;color:var(--navy2)">Laura Martínez Rojas</h1>
+      <p style="margin:0;color:var(--muted)">C.C. 1.020.***.456 · Elaboradora de actas · Mesa 012 · Mitú, Vaupés</p>
+      <p style="font-size:15px;margin:20px 0">Asistió a la capacitación para las <b>Elecciones territoriales del 31 de octubre de 2027</b>, con una intensidad de <b id="hrs">6 horas</b>.</p>
+      <table class="t" style="max-width:560px"><tr><th>Sesión</th><th>Modalidad</th><th>Asistencia</th></tr>
+        <tr><td>Simulador interactivo de actas E-14</td><td>Virtual</td><td>✓ 100%</td></tr>
+        <tr><td>Clase en vivo: E-14 sin errores</td><td>Streaming</td><td id="liveAtt">✓ 54 min</td></tr>
+        <tr><td>Refuerzo presencial · Registraduría Mitú</td><td>Presencial (QR)</td><td>✓ 2 h</td></tr></table>
+      <div class="row" style="margin-top:22px;align-items:flex-end;justify-content:space-between">
+        <div style="font-size:12px;color:var(--muted)">Código de verificación<br><b style="color:var(--ink);font-size:14px">ML-27-ASIS-7Q4K9D</b><br>Expedido: 22-10-2027</div>
+        <div class="qr" id="qr"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card"><h3>Verificación del certificado</h3><p class="sub">La Registraduría o el empleador escanean el QR para validar la asistencia.</p><button class="btn" style="width:100%" id="btnVer" onclick="verify()">📷 Simular escaneo del QR</button><div class="fb hide" id="fbv"></div></div>
+      <div class="card" style="margin-top:14px"><h3>Compartir</h3><div class="row"><button class="btn ghost sm" onclick="toast('PDF generado (demo)')">⬇ PDF</button><button class="btn ghost sm" onclick="toast('Enviado al correo registrado (demo)')">✉ Correo</button><button class="btn ghost sm" onclick="toast('Enlace copiado (demo)')">🔗 Enlace</button></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RECORDATORIOS ================= -->
+<section id="v-recordatorios" class="hide">
+  <div class="grid" style="grid-template-columns:1fr 330px 300px">
+    <div><h2>Recordatorios escalonados</h2><p class="sub">Cada etapa dispara mensajes por el canal más efectivo y escala si el participante no responde.</p><div class="tl" id="tl"></div></div>
+    <div><div class="phone"><div class="scr"><div class="wa"><div class="av">ML</div><div><b>MesaLista · Registraduría</b><small>Prototipo de demostración</small></div></div><div class="thread" id="thread"></div></div></div></div>
+    <div>
+      <div class="card"><h3 id="rTitle"></h3><div id="rRules" style="font-size:12.5px"></div><button class="btn" style="width:100%;margin-top:12px" id="btnSend" onclick="sendStage()">▶ Simular envío</button></div>
+      <div class="card" style="margin-top:14px"><h3>Resultados de la etapa</h3><div id="rStats" style="font-size:12.5px;color:var(--muted)">Simula el envío para ver resultados.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TABLERO ================= -->
+<section id="v-tablero" class="hide">
+  <div class="row" style="margin-bottom:16px"><div><h2 style="margin:0">Tablero de gestión y control</h2><p class="sub" style="margin:2px 0 0">Datos simulados · actualizado hace 2 minutos</p></div>
+    <div class="row" style="margin-left:auto"><select class="sel" id="fDep" onchange="renderDash()"><option>Nacional</option><option>Antioquia</option><option>Bogotá D.C.</option><option>Nariño</option><option>Vaupés</option></select>
+    <select class="sel" id="fRol" onchange="renderDash()"><option>Todos los roles</option><option>Jurados</option><option>Elaboradores de actas</option><option>Delegados</option></select></div></div>
+  <div class="grid g5" id="kpis"></div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h3>Errores más frecuentes en el simulador de actas</h3><div id="errs"></div><p style="font-size:11.5px;color:var(--muted);margin:8px 0 0">Los errores alimentan contenidos de refuerzo y la agenda de clases en vivo.</p></div>
+    <div class="card"><h3>Embudo de recordatorios (etapa “pendientes”)</h3><div class="funnel" id="fun"></div></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h3>Asistencia a clases en vivo (últimos 10 días)</h3><svg id="area" viewBox="0 0 520 190" style="width:100%"></svg></div>
+    <div class="card"><h3>Control por municipio</h3><table class="t" id="mun"></table></div>
+  </div>
+</section>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2300)}
+const CANDS=['Candidato 1 · Partido Alfa','Candidato 2 · Mov. Beta','Candidato 3 · Coalición Gama','Candidato 4 · Partido Delta','Candidato 5 · Grupo Épsilon'];
+const CAT=[{k:'c0',n:'Candidato 1',s:'Partido Alfa'},{k:'c1',n:'Candidato 2',s:'Mov. Beta'},{k:'c2',n:'Candidato 3',s:'Coalición Gama'},{k:'c3',n:'Candidato 4',s:'Partido Delta'},{k:'c4',n:'Candidato 5',s:'Grupo Épsilon'},{k:'blanco',n:'Voto en blanco',s:'',sp:1},{k:'nulo',n:'Votos nulos',s:'',sp:1},{k:'nomarc',n:'No marcados',s:'',sp:1}];
+// ballot marks: c0..c4, 'B' blank, two cands = nulo, none = nomarc, 'out'
+const BASE=[{m:[0],t:'c0'},{m:[1],t:'c1'},{m:[0],t:'c0'},{m:[2],t:'c2'},{m:[1],t:'c1'},{m:['B'],t:'blanco'},{m:[0,3],t:'nulo'},{m:[1],t:'c1'},{m:[],t:'nomarc'},{m:[4],t:'c4'},{m:[2],t:'c2'},{m:[0],t:'c0'},{m:[1],t:'c1'}];
+const SIM=window.SIM={step:1,ballots:[],removed:null,sorted:{},vals:{},errors:{class:0,acta:{}},found:0,dest:0,t0:Date.now(),signed:0};
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function balHTML(b,i){const opt=k=>b.m.includes(k)?'<span class="x">✕</span>':'';
+ return `<div class="bal" data-i="${i}"><i>1${opt(0)}</i><i>2${opt(1)}</i><i>3${opt(2)}</i><i>4${opt(3)}</i><i>5${opt(4)}</i><i class="bk">BLANCO${opt('B')}</i>${b.m.includes('out')?'<span class="xo">✕</span>':''}</div>`}
+const STEPS=['Nivelación','Clasificación','Acta E-14','Ejemplares y transmisión','Resultado'];
+function renderSteps(){$('#steps').innerHTML=STEPS.map((s,i)=>`<div class="st ${i+1<SIM.step?'ok':i+1===SIM.step?'on':''}"><div class="n">${i+1<SIM.step?'✓':i+1}</div>${s}</div>`).join('')}
+function goStep(n){SIM.step=n;renderSteps();[1,2,3,4,5].forEach(k=>$('#p'+k).classList.toggle('hide',k!==n));if(n===3)$('#p3').style.display='grid';
+ if(n===2)renderSort();if(n===3)renderActa();if(n===4)renderCmp();if(n===5)renderRes();window.scrollTo(0,0)}
+function resetSim(){Object.assign(SIM,{step:1,removed:null,sorted:{},vals:{},errors:{class:0,acta:{}},found:0,dest:0,t0:Date.now(),signed:0});SIM.ballots=shuffle(BASE.map(b=>({...b})));
+ $('#urn1').innerHTML=SIM.ballots.map((b,i)=>`<div class="bal back" id="u${i}"><b>MESA 012</b></div>`).join('');$('#nUrna').textContent='?';
+ ['#btnLevel','#btnToSort','#fb1'].forEach(s=>$(s).classList.add('hide'));$('#btnCount').classList.remove('hide');goStep(1)}
+function countUrn(){$('#nUrna').textContent=SIM.ballots.length;const f=$('#fb1');f.className='fb warn';f.innerHTML='<b>Hay 13 tarjetas y 12 votantes.</b> Recuenta: la diferencia persiste. Corresponde nivelar la mesa: introduce de nuevo las tarjetas, retira al azar el excedente y destrúyelo sin abrir.';
+ $('#btnCount').classList.add('hide');$('#btnLevel').classList.remove('hide')}
+function levelUrn(){const idx=Math.floor(Math.random()*SIM.ballots.length);const el=$('#u'+idx);el.classList.add('burn');$('#btnLevel').disabled=true;
+ setTimeout(()=>{SIM.removed=SIM.ballots.splice(idx,1)[0];$('#urn1').innerHTML=SIM.ballots.map(()=>`<div class="bal back"><b>MESA 012</b></div>`).join('');$('#nUrna').textContent=SIM.ballots.length;
+  const f=$('#fb1');f.className='fb ok';f.innerHTML='<b>Mesa nivelada.</b> 1 tarjeta excedente destruida sin abrir. Total a escrutar: 12. Registra 1 voto destruido (incinerado) en el E-14.';$('#btnLevel').classList.add('hide');$('#btnLevel').disabled=false;$('#btnToSort').classList.remove('hide')},1200)}
+SIM.truth=()=>{const t={};CAT.forEach(c=>t[c.k]=0);SIM.ballots.forEach(b=>t[b.t]++);return t};
+
+/* ---------- drag engine (pointer) ---------- */
+let drag=null,selBal=null;
+function dragify(el,payload,zoneSel,onDrop){
+ el.addEventListener('pointerdown',e=>{e.preventDefault();const r=el.getBoundingClientRect();const g=el.cloneNode(true);g.classList.add('dghost');g.style.width=r.width+'px';g.style.height=r.height+'px';g.style.left=r.left+'px';g.style.top=r.top+'px';document.body.appendChild(g);
+  drag={el,g,dx:e.clientX-r.left,dy:e.clientY-r.top,sx:e.clientX,sy:e.clientY,payload,zoneSel,onDrop,moved:false};el.style.opacity=.35});
+}
+document.addEventListener('pointermove',e=>{if(!drag)return;drag.moved=drag.moved||Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)>6;drag.g.style.left=e.clientX-drag.dx+'px';drag.g.style.top=e.clientY-drag.dy+'px';
+ $$(drag.zoneSel).forEach(z=>z.classList.remove('hov'));const z=zoneAt(e.clientX,e.clientY,drag.zoneSel);if(z)z.classList.add('hov')});
+document.addEventListener('pointerup',e=>{if(!drag)return;const d=drag;drag=null;d.g.remove();d.el.style.opacity=1;$$(d.zoneSel).forEach(z=>z.classList.remove('hov'));
+ if(!d.moved){d.el.dispatchEvent(new CustomEvent('tap'));return}const z=zoneAt(e.clientX,e.clientY,d.zoneSel);if(z)d.onDrop(d.payload,z,d.el)});
+function zoneAt(x,y,sel){return $$(sel).find(z=>{const r=z.getBoundingClientRect();return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom})}
+
+/* ---------- step 2 ---------- */
+function renderSort(){SIM.sorted={};CAT.forEach(c=>SIM.sorted[c.k]=[]);
+ $('#urn2').innerHTML=SIM.ballots.map((b,i)=>balHTML(b,i)).join('');
+ $('#piles').innerHTML=CAT.map(c=>`<div class="pile ${c.sp?'special':''}" data-zone="${c.k}" id="pile-${c.k}"><b>${c.n}</b><small style="color:var(--muted)">${c.s||'&nbsp;'}</small><span class="cnt">0</span><div class="stack"></div></div>`).join('');
+ $$('#urn2 .bal').forEach(el=>{const i=+el.dataset.i;dragify(el,i,'.pile',dropBal);el.addEventListener('tap',()=>{$$('#urn2 .bal').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');selBal=i})});
+ $$('.pile').forEach(p=>p.addEventListener('click',()=>{if(selBal!==null){const el=$(`#urn2 .bal[data-i="${selBal}"]`);dropBal(selBal,p,el);selBal=null}}));
+ $('#left').textContent=SIM.ballots.length;$('#fb2').className='fb hide';$('#btnToActa').disabled=true}
+const WHY={c0:'una sola casilla marcada',blanco:'solo la casilla de voto en blanco',nulo:'más de una opción marcada',nomarc:'no tiene marca dentro de ninguna casilla'};
+function dropBal(i,zone,el){const b=SIM.ballots[i],k=zone.dataset.zone,f=$('#fb2');
+ if(b.t!==k){SIM.errors.class++;zone.classList.remove('err');void zone.offsetWidth;zone.classList.add('err');f.className='fb bad';f.innerHTML='<b>Ese no es el grupo correcto.</b> Esta tarjeta tiene '+(WHY[b.t]||WHY.c0)+'.';return}
+ SIM.sorted[k].push(i);el.remove();zone.querySelector('.cnt').textContent=SIM.sorted[k].length;zone.querySelector('.stack').insertAdjacentHTML('beforeend','<span></span>');
+ const left=$$('#urn2 .bal').length;$('#left').textContent=left;f.className='fb ok';f.innerHTML='<b>Correcto.</b> '+(b.t.startsWith('c')?'Voto válido: '+WHY.c0+'.':'Tiene '+WHY[b.t]+'.');
+ if(!left){f.innerHTML='<b>¡Conteo terminado!</b> Lee en voz alta los totales de cada grupo; otro jurado los anota en el E-14.';$('#btnToActa').disabled=false}}
+
+/* ---------- step 3: acta ---------- */
+const FIELDS=[{k:'e11',l:'Total de votantes en el formulario E-11',g:'N'},{k:'urna',l:'Total de votos en la urna',g:'N'},{k:'inc',l:'Total de votos destruidos (incinerados)',g:'N'},
+ ...CAT.slice(0,5).map((c,i)=>({k:c.k,l:CANDS[i],g:'C'})),{k:'blanco',l:'Votos en blanco',g:'O'},{k:'nulo',l:'Votos nulos',g:'O'},{k:'nomarc',l:'Votos no marcados',g:'O'},{k:'total',l:'TOTAL VOTOS DE LA MESA',g:'O'}];
+function expected(){const t=SIM.truth();return {...t,e11:12,urna:13,inc:1,total:SIM.ballots.length}}
+function frHTML(f){return `<div class="fr" id="fr-${f.k}" data-k="${f.k}"><label>${f.k==='total'?'<b>'+f.l+'</b>':f.l}</label><div class="boxes" id="bx-${f.k}"><span></span><span></span><span></span></div><input id="in-${f.k}" inputmode="numeric" maxlength="3"></div>`}
+const GUIDE={e11:['Total de votantes del E-11','Copia el número total de votantes registrados en el E-11 (el último consecutivo). Aquí solo se usa como referencia para nivelar la mesa.'],
+ urna:['Total de votos en la urna','Número de tarjetas encontradas al abrir la urna, contadas antes de nivelar y sin mirar las marcas.'],
+ inc:['Votos destruidos (incinerados)','Tarjetas excedentes retiradas al azar y destruidas sin abrir durante la nivelación. Si no hubo excedente, deja la casilla en blanco.'],
+ cand:['Votos por candidato','Escribe los votos de este candidato alineados a la derecha: las casillas que no uses quedan en blanco. Si el candidato no tiene votos, deja toda la fila en blanco: no escribas 0.'],
+ blanco:['Votos en blanco','Tarjetas en las que solo se marcó la casilla de voto en blanco.'],
+ nulo:['Votos nulos','Tarjetas con marcas en más de una opción, que no permiten identificar la voluntad del elector.'],
+ nomarc:['Votos no marcados','Tarjetas sin ninguna marca o con marcas fuera de las casillas.'],
+ total:['Total de votos de la mesa','Suma de los votos por candidato, en blanco, nulos y no marcados. Debe ser igual a votos en la urna menos destruidos, y nunca mayor que los votantes del E-11.'],
+ sig:['Firmas de los jurados','Cada jurado firma y escribe su número de cédula en los tres ejemplares. Sin firmas, el acta queda incompleta.'],
+ obs:['Observaciones','Registra las novedades de la mesa: si un testigo pidió reconteo, si se recibieron reclamaciones por escrito o cualquier hecho relevante. Escribe con letra clara y sin tachones.']};
+function setGuide(k){const g=GUIDE[k]||GUIDE[k&&k.startsWith('c')?'cand':'e11'];$('#gT').textContent=g[0];$('#gD').textContent=g[1];const c=$('#guide');c.style.transition='.2s';c.style.boxShadow='0 0 0 3px #00A6A6';setTimeout(()=>c.style.boxShadow='',500)}
+function renderActa(){SIM.vals={};SIM.signed=0;
+ $('#frN').innerHTML=FIELDS.filter(f=>f.g==='N').map(frHTML).join('');$('#frC').innerHTML=FIELDS.filter(f=>f.g==='C').map(frHTML).join('');$('#frO').innerHTML=FIELDS.filter(f=>f.g==='O').map(frHTML).join('');
+ FIELDS.forEach(f=>{const row=$('#fr-'+f.k),inp=$('#in-'+f.k);row.addEventListener('click',()=>inp.focus());
+  inp.addEventListener('focus',()=>{$$('.fr').forEach(r=>r.classList.remove('focus'));row.classList.add('focus');setGuide(f.k)});
+  inp.addEventListener('input',()=>{inp.value=inp.value.replace(/\D/g,'').slice(0,3);SIM.vals[f.k]=inp.value;paint(f.k);live()});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();const i=FIELDS.indexOf(f);if(FIELDS[i+1])$('#in-'+FIELDS[i+1].k).focus();else inp.blur()}})});
+ $('#sigs').innerHTML=['Jurado 1 (presidente)','Jurado 2','Jurado 3'].map((n,i)=>`<div id="sg${i}" onclick="sign(${i})"><svg viewBox="0 0 200 44"><path d="${['M8 30 C30 5,40 40,60 20 S90 10,100 30 S140 20,150 12 L190 28','M10 25 Q30 2 45 30 T80 22 Q100 40 120 15 T170 30','M12 32 C20 10,50 12,58 30 S90 35,96 14 S130 8,150 30 L188 18'][i]}"/></svg>${n} · C.C.</div>`).join('');
+ const t=SIM.truth();$('#myCounts').innerHTML=CAT.map(c=>`<div class="row" style="justify-content:space-between;margin:3px 0"><span>${c.n}</span><b>${t[c.k]}</b></div>`).join('')+`<div class="row" style="justify-content:space-between;margin-top:6px;border-top:1px solid var(--line);padding-top:6px"><span>Votantes E-11 / urna / destruidos</span><b>12 / 13 / 1</b></div>`;
+ $('#fb3').className='fb hide';$('#btnToCmp').classList.add('hide');$('#obs').value='';$('#obs').onfocus=()=>{$$('.fr').forEach(r=>r.classList.remove('focus'));setGuide('obs')};live();setTimeout(()=>$('#in-e11').focus(),200)}
+function paint(k){const v=SIM.vals[k]||'',sp=$$('#bx-'+k+' span'),pad=3-v.length;sp.forEach((s,i)=>{s.classList.remove('void');s.textContent=i<pad?'':v[i-pad]});$('#fr-'+k).classList.remove('bad','good');const tip=$('#fr-'+k+' .tip');if(tip)tip.remove()}
+function sign(i){setGuide('sig');const el=$('#sg'+i);if(el.classList.contains('done'))return;el.classList.add('done');SIM.signed++;live()}
+function live(){const v=SIM.vals,n=x=>v[x]===undefined||v[x]===''?0:+v[x];const parts=['c0','c1','c2','c3','c4','blanco','nulo','nomarc'].reduce((a,k)=>a+n(k),0);
+ const checks=[[v.total&&parts===n('total'),'La suma de candidatos, blanco, nulos y no marcados es igual al total'],[v.total&&n('total')<=n('e11')&&v.e11,'El total no supera a los votantes del E-11'],[v.urna&&v.inc&&n('urna')-n('inc')===n('total')&&v.total,'Votos en urna − destruidos = total de la mesa'],[Object.entries(v).every(([k,x])=>!(k.startsWith('c')&&x==='0'))&&Object.keys(v).length>3,'Casillas en cero se dejan en blanco'],[SIM.signed===3,'Firmas de los tres jurados']];
+ $('#valids').innerHTML=checks.map(c=>`<div class="vrow ${c[0]?'ok':''}"><span class="d">${c[0]?'✓':''}</span>${c[1]}</div>`).join('')}
+const ERRTXT={blank0:'Si un candidato tiene 0 votos, la casilla se deja en blanco.',val:'El valor no coincide con el conteo. Revisa tus grupos de votos.',sig:'Faltan firmas de jurados.'};
+function checkActa(){const ex=expected(),v=SIM.vals;let errs=0;
+ FIELDS.forEach(f=>{const row=$('#fr-'+f.k),raw=v[f.k]||'';let e=null;
+  if(f.g==='C'&&ex[f.k]===0){if(raw!==''){e=raw==='0'?'blank0':'val'}}else if(raw===''||+raw!==ex[f.k])e='val';
+  row.classList.remove('bad','good');const old=row.querySelector('.tip');if(old)old.remove();
+  if(e){errs++;row.classList.add('bad');row.insertAdjacentHTML('beforeend',`<div class="tip">${ERRTXT[e]}</div>`);SIM.errors.acta[e]=(SIM.errors.acta[e]||0)+1}else row.classList.add('good')});
+ if(SIM.signed<3){errs++;SIM.errors.acta.sig=(SIM.errors.acta.sig||0)+1}
+ const f=$('#fb3');if(errs){f.className='fb bad';f.innerHTML=`<b>${errs} observación(es).</b> Corrige las casillas marcadas en rojo${SIM.signed<3?' y completa las firmas':''}. Recuerda: el acta definitiva no admite tachones ni enmendaduras.`}
+ else{f.className='fb ok';f.innerHTML='<b>¡Acta correcta!</b> Ahora diligencia los otros dos ejemplares y compáralos.';$('#btnToCmp').classList.remove('hide')}}
+
+/* ---------- step 4: comparación ---------- */
+let DIFF=[];
+function renderCmp(){const ex=expected();SIM.found=0;SIM.dest=0;$('#found').textContent=0;$('#destBox').classList.add('hide');$('#btnRes').classList.add('hide');$('#fb4').className='fb hide';
+ const rows=[['Votantes E-11','e11'],['Votos en urna','urna'],['Destruidos','inc'],...CAT.slice(0,5).map(c=>[c.n,c.k]),['Blanco','blanco'],['Nulos','nulo'],['No marcados','nomarc'],['TOTAL','total']];
+ const c1=ex.c1,alt=c1===4?7:c1+3;DIFF=[['del','c1',String(alt)],['tra','total',String(ex.total).split('').reverse().join('')==String(ex.total)?String(ex.total+1):String(ex.total).split('').reverse().join('')]];
+ const cp=(id,name,col)=>`<div class="copy" id="copy-${id}"><div class="ch" style="background:${col}">EJEMPLAR ${name}</div><table>${rows.map(r=>{const d=DIFF.find(x=>x[0]===id&&x[1]===r[1]);const val=d?d[2]:(ex[r[1]]===0&&r[1].startsWith('c')?'':ex[r[1]]);return `<tr><td>${r[0]}</td><td class="v" data-c="${id}" data-k="${r[1]}">${val}</td></tr>`}).join('')}</table></div>`;
+ $('#copies').innerHTML=cp('cla','CLAVEROS','#13315C')+cp('del','DELEGADOS','#00A6A6')+cp('tra','TRANSMISIÓN','#D17A00');
+ $$('#copies td.v').forEach(td=>td.addEventListener('click',()=>{const id=td.dataset.c,k=td.dataset.k;if(td.classList.contains('found'))return;
+  if(DIFF.some(d=>d[0]===id&&d[1]===k)){td.classList.add('found');SIM.found++;$('#found').textContent=SIM.found;const f=$('#fb4');f.className='fb warn';
+   f.innerHTML=id==='del'?'<b>Diferencia en el ejemplar de delegados:</b> el Candidato 2 aparece con un valor distinto. Un error de transcripción puede originar reclamaciones en el escrutinio.':'<b>Diferencia en el ejemplar de transmisión:</b> el total tiene los dígitos invertidos. Este ejemplar alimenta el preconteo informativo.';
+   if(SIM.found===2)setTimeout(()=>{td.closest('table');f.className='fb ok';f.innerHTML='<b>Encontraste las 2 diferencias.</b> Los ejemplares se corrigen antes de firmar, cotejando cifra por cifra con el conteo leído en voz alta.';DIFF.forEach(d=>{const c=$(`#copies td.v[data-c="${d[0]}"][data-k="${d[1]}"]`);c.classList.remove('found');c.style.background='var(--green-l)';c.textContent=d[1]==='c1'?ex.c1:ex.total});showDest()},1300)}
+  else{td.classList.remove('miss');void td.offsetWidth;td.classList.add('miss');SIM.errors.cmp=(SIM.errors.cmp||0)+1}}))}
+function showDest(){$('#destBox').classList.remove('hide');$('#trxBox').classList.add('hide');SIM.cla=false;SIM.chk=new Set();SIM.trx=0;
+ $('#minis').innerHTML=`<span class="mini" id="mini-cla" data-k="cla" style="background:#13315C">📄 Ejemplar CLAVEROS</span>`;
+ $('#dests').innerHTML=`<div class="env" data-zone="cla" id="env-cla"><div class="ic">✉️</div><b>Sobre de claveros</b><br><small style="color:var(--muted)">Junto con el E-10, el E-11, los votos y las reclamaciones escritas</small></div>`;
+ dragify($('#mini-cla'),'cla','.env',(k,z,el)=>{el.remove();z.classList.add('ok');z.insertAdjacentHTML('beforeend','<div style="margin-top:6px;font-weight:700;color:var(--green)">✓ Recibido</div>');SIM.cla=true;const f=$('#fb4');f.className='fb ok';f.innerHTML='Ejemplar de claveros guardado en su sobre.';chkDone()});
+ $('#checks').innerHTML=[['del','Ejemplar de DELEGADOS entregado','Al funcionario de la Registraduría'],['tra','Ejemplar de TRANSMISIÓN entregado','Al delegado de puesto para el preconteo']].map(c=>`<label class="mod" id="chk-${c[0]}" style="display:flex;gap:12px;align-items:center;padding:14px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:10px;cursor:pointer;background:#fff"><input type="checkbox" style="width:20px;height:20px;accent-color:#2A9D5C" onchange="chkItem('${c[0]}',this)"><div><b>${c[1]}</b><br><small style="color:var(--muted)">${c[2]}</small></div></label>`).join('')}
+function chkItem(k,el){if(el.checked)SIM.chk.add(k);else SIM.chk.delete(k);$('#chk-'+k).style.borderColor=el.checked?'var(--green)':'var(--line)';$('#chk-'+k).style.background=el.checked?'var(--green-l)':'#fff';chkDone()}
+const TRX=[['🔍','Verificar el ejemplar','Legible, sin tachones ni enmendaduras y con las firmas de los jurados.','Verificado'],['📋','Lista de chequeo','El delegado de puesto confirma mesa, corporación y totales antes de transmitir.','Completada'],['📡','Transmitir para preconteo','Se envía el ejemplar de transmisión al centro de preconteo informativo.','Transmitir'],['📌','Publicar el E-14','Se publica en el puesto de votación para consulta de testigos y ciudadanos.','Publicado']];
+function chkDone(){if(!(SIM.cla&&SIM.chk.size===2)||!$('#trxBox').classList.contains('hide'))return;const f=$('#fb4');f.className='fb ok';f.innerHTML='<b>Entrega completa.</b> El delegado expide el E-17 y cada jurado recibe su E-18. Ahora sigue el proceso de transmisión.';
+ $('#trxBox').classList.remove('hide');renderTrx();$('#trxBox').scrollIntoView({behavior:'smooth',block:'center'})}
+function renderTrx(){$('#trx').innerHTML=TRX.map((t,i)=>{const done=i<SIM.trx,cur=i===SIM.trx;return `<div class="card" id="trx-${i}" style="border-color:${done?'var(--green)':cur?'var(--teal)':'var(--line)'};background:${done?'var(--green-l)':'#fff'};opacity:${i>SIM.trx?.5:1}"><div style="font-size:24px">${done?'✅':t[0]}</div><b style="display:block;margin:6px 0 4px">${i+1}. ${t[1]}</b><small style="color:var(--muted)">${t[2]}</small>${i===2&&(cur||done)?`<div class="hb" style="grid-template-columns:1fr 38px;margin:8px 0 0"><div class="tr"><i id="txbar" style="width:${done?100:0}%;background:var(--teal)"></i></div><b id="txpct" style="font-size:11px">${done?'100%':'0%'}</b></div>`:''}<div style="margin-top:10px">${done?`<span class="chip g">✓ ${i===2?'Transmitido 4:52 p.m.':t[3]}</span>`:cur?`<button class="btn sm" id="trxb-${i}" onclick="doTrx(${i})">${t[3]==='Transmitir'?'📡 Transmitir':'✓ Marcar cumplido'}</button>`:''}</div></div>`}).join('')}
+function doTrx(i){if(i!==2){SIM.trx++;renderTrx();endTrx();return}$('#trxb-2').disabled=true;let p=0;const t=setInterval(()=>{p+=10;$('#txbar').style.width=p+'%';$('#txpct').textContent=p+'%';if(p>=100){clearInterval(t);SIM.trx++;renderTrx();toast('E-14 de la Mesa 012 transmitido para preconteo')}},120)}
+function endTrx(){if(SIM.trx===4){const f=$('#fb4');f.className='fb ok';f.innerHTML='<b>Proceso completo.</b> El E-14 quedó entregado, transmitido para el preconteo informativo y publicado en el puesto.';$('#btnRes').classList.remove('hide')}}
+
+/* ---------- step 5 ---------- */
+function renderRes(){const ae=Object.values(SIM.errors.acta).reduce((a,b)=>a+b,0),ce=SIM.errors.class,me=SIM.errors.cmp||0,de=SIM.errors.dest||0;
+ const sc=Math.max(40,100-ce*4-ae*5-me*3-de*3);const col=sc>=80?'var(--green)':'var(--amber)';$('#ring').style.background=`conic-gradient(${col} ${sc*3.6}deg,#EEF2F7 0)`;$('#score').textContent=sc+'%';
+ const mins=Math.max(1,Math.round((Date.now()-SIM.t0)/60000));$('#rt').textContent=sc>=80?'¡Acta aprobada!':'Necesitas refuerzo';$('#rs').textContent=`Tiempo: ${mins} min · ${ce+ae+me+de} errores corregidos durante la práctica`;
+ const comp=[['Nivelación de la mesa',100],['Clasificación de votos',Math.max(50,100-ce*12)],['Diligenciamiento del E-14',Math.max(40,100-ae*15)],['Comparación de ejemplares',Math.max(50,100-me*15)],['Entrega y transmisión',Math.max(50,100-de*20)]];
+ $('#comp').innerHTML=comp.map(c=>`<div class="hb" style="grid-template-columns:200px 1fr 46px"><span>${c[0]}</span><div class="tr"><i style="width:${c[1]}%;background:${c[1]>=80?'var(--teal)':'var(--amber)'}"></i></div><b>${c[1]}%</b></div>`).join('');
+ const weak=comp.filter(c=>c[1]<80).map(c=>c[0]);$('#adapt').innerHTML=weak.length?`<b>Ruta adaptativa:</b> se agregó una cápsula de refuerzo en <b>${weak.join(', ')}</b> y te sugerimos la clase en vivo del sábado.`:'<b>Ruta adaptativa:</b> dominas el diligenciamiento. Se habilitó el simulador avanzado (varias corporaciones y reclamaciones).'}
+
+/* ================= EN VIVO ================= */
+const LSL=[`<b style="color:var(--navy)">E-14 · Casillas en cero</b><div style="margin-top:10px;display:grid;grid-template-columns:1fr 90px;gap:6px;font-size:11px"><span>Candidato 4</span><span style="border:1.5px solid #3b4a63;height:26px"></span><span>Candidato 5</span><span style="border:1.5px solid #3b4a63;height:26px;font:600 20px Caveat;color:#1a2a8f;text-align:right;padding-right:10px">1</span></div><p style="font-size:11px;color:#5D6B82">Si no hay votos, la casilla queda en blanco.</p>`,`<b style="color:var(--navy)">Tres ejemplares, una sola verdad</b><div style="display:flex;gap:6px;margin-top:12px">${['Claveros','Delegados','Transmisión'].map((x,i)=>`<div style="flex:1;border:1.5px solid #3b4a63;border-radius:4px;padding:6px;font-size:10px;text-align:center">${x}<div style="font:600 22px Caveat;color:#1a2a8f">212</div></div>`).join('')}</div><p style="font-size:11px;color:#5D6B82">Coteje cifra por cifra antes de firmar.</p>`];
+let li=0,liveT=null,attMin=24;
+const CHAT=[['Andrés (Pasto)','¿Si un voto tiene la X un poco fuera de la casilla es nulo?','q'],['Facilitadora','Si la intención es clara y la marca está en una sola opción, es válido. Ante la duda, se favorece la voluntad del elector.','h'],['Yuli (Quibdó)','¿Qué pasa si el ejemplar de transmisión tiene un error?','q'],['Facilitadora','Se corrige antes de firmar, cotejando con el conteo. En el simulador lo practicamos en el paso 4.','h'],['Carlos (Mitú)','Gracias, muy claro lo de las casillas en cero 👍','']];
+function startLive(){renderPoll();$('#msgs').innerHTML='';let i=0;clearInterval(liveT);
+ const tick=()=>{if(i<CHAT.length){const c=CHAT[i++];$('#msgs').insertAdjacentHTML('beforeend',`<div class="m ${c[2]}"><b>${c[0]}:</b> ${c[1]}</div>`);$('#msgs').scrollTop=1e6}
+  li=1-li;$('#liveSlide').innerHTML=LSL[li];const v=1284+Math.floor(Math.random()*60);$('#viewers').textContent='👁 '+v.toLocaleString('es-CO')};
+ $('#liveSlide').innerHTML=LSL[0];liveT=setInterval(tick,2600)}
+let pollV=null;function renderPoll(){const o=[['Se deja en blanco',64],['Se escribe 0',28],['Se anula con una raya',8]];
+ $('#poll').innerHTML=`<div style="font-size:12.5px;font-weight:700;margin-bottom:4px">📊 Encuesta: candidato con 0 votos en el E-14…</div>`+o.map((x,i)=>`<button id="poll-${i}" class="${pollV===i?'me':''}" onclick="pollV=${i};renderPoll()"><i style="width:${pollV===null?0:x[1]}%"></i><span>${x[0]}${pollV===null?'':' · '+x[1]+'%'}${pollV===i?' ✓':''}</span></button>`).join('')}
+function markAtt(){$('#btnAtt').textContent='✓ Asistencia registrada';$('#btnAtt').disabled=true;let m=24;const t=setInterval(()=>{m+=3;$('#attPct').textContent=m+' min';$('#attBar').style.width=Math.min(100,m/60*100)+'%';
+  if(m>=54){clearInterval(t);$('#attTxt').innerHTML='<b style="color:var(--green)">✓ Cumple el mínimo · certificado actualizado</b>';toast('Asistencia certificada · ver certificado')}},150)}
+$('#cf').onsubmit=e=>{e.preventDefault();const v=$('#ci').value.trim();if(!v)return;$('#msgs').insertAdjacentHTML('beforeend',`<div class="m"><b>Tú:</b> ${v.replace(/</g,'&lt;')}</div>`);$('#ci').value='';setTimeout(()=>{$('#msgs').insertAdjacentHTML('beforeend','<div class="m h"><b>Moderador:</b> Pregunta recibida, la facilitadora la responderá en el bloque de preguntas.</div>');$('#msgs').scrollTop=1e6},900)};
+
+/* ================= CERTIFICADO ================= */
+function renderQR(){let s=7,h='';const rnd=()=>(s=(s*9301+49297)%233280)/233280;for(let y=0;y<21;y++)for(let x=0;x<21;x++){const f=(a,b)=>x>=a&&x<a+7&&y>=b&&y<b+7;let k;
+ const fin=(a,b)=>{const dx=x-a,dy=y-b;return dx===0||dx===6||dy===0||dy===6||(dx>=2&&dx<=4&&dy>=2&&dy<=4)};
+ if(f(0,0))k=fin(0,0);else if(f(14,0))k=fin(14,0);else if(f(0,14))k=fin(0,14);else k=rnd()>.52;h+=`<i class="${k?'k':''}"></i>`}$('#qr').innerHTML=h}
+function verify(){const f=$('#fbv');f.className='fb info';f.innerHTML='Validando…';setTimeout(()=>{f.className='fb ok';f.innerHTML='<b>✓ Certificado auténtico</b><br>Titular: Laura Martínez Rojas<br>Asistencia: 6 h (virtual, streaming y presencial)<br>Válido como constancia para la Registraduría y el empleador.'},900)}
+
+/* ================= RECORDATORIOS ================= */
+const RS=[{t:'Designación',w:'T − 30 días',ch:[['WhatsApp','#25D366'],['SMS','#0a7cff']],msg:'Hola Laura 👋 Fuiste designada <b>Elaboradora de actas</b> en la <b>Mesa 012</b>, I.E. San José (Mitú). Tu capacitación ya está habilitada.',cta:'Iniciar capacitación',rules:['Envío inmediato al publicarse la designación','Canal principal: WhatsApp; respaldo: SMS','Si no abre en 48 h → correo + SMS'],st:[100,96,81,64]},
+ {t:'Plazo de capacitación',w:'T − 15 días',ch:[['Push','#13315C'],['Correo','#5D6B82']],msg:'Te quedan <b>15 días</b> para completar tu ruta. Avance actual: <b>40%</b>. Siguiente: Simulador de actas E-14 (12 min).',cta:'Continuar donde quedé',rules:['Solo a quienes no han completado la ruta','Incluye el siguiente paso concreto','Frecuencia máxima: 1 mensaje cada 3 días'],st:[100,98,72,51]},
+ {t:'Pendientes',w:'T − 8 días',ch:[['WhatsApp','#25D366'],['SMS','#0a7cff'],['Coordinador','#D1495B']],msg:'⚠ Aún tienes pendiente la <b>evaluación final</b>. Si no la completas, tu coordinador será notificado. ¿Necesitas apoyo? Responde AYUDA.',cta:'Presentar evaluación',rules:['Escalamiento: WhatsApp → SMS → llamada','Sin acción en 72 h → alerta al coordinador de puesto','Sin respuesta → candidato a reemplazo (lista de elegibles)'],st:[100,94,77,58]},
+ {t:'Víspera',w:'T − 1 día',ch:[['WhatsApp','#25D366'],['SMS','#0a7cff']],msg:'Mañana es el gran día 🗳️ Llega a las <b>7:00 a.m.</b> a I.E. San José, Mesa 012. Lleva tu cédula. Repaso de 10 min y lista de chequeo:',cta:'Ver repaso y checklist',rules:['A todos los designados y remanentes','Incluye dirección, hora y repaso de 10 minutos','Disponible sin conexión una vez abierto'],st:[100,97,88,74]}];
+let rsi=0,sent=new Set();
+function renderRem(){$('#tl').innerHTML=RS.map((r,i)=>`<div class="ti ${i===rsi?'on':''} ${sent.has(i)?'sent':''}" id="ti-${i}" onclick="rsi=${i};renderRem()"><div class="row" style="justify-content:space-between"><b>${r.t}</b><span class="chip n">${r.w}</span></div><small>${r.ch.map(c=>c[0]).join(' · ')}</small>${sent.has(i)?' <span class="chip g" style="margin-left:6px">Enviado</span>':''}</div>`).join('');
+ const r=RS[rsi];$('#rTitle').textContent='Etapa: '+r.t;$('#rRules').innerHTML=r.rules.map(x=>`<div class="vrow ok"><span class="d">✓</span>${x}</div>`).join('');
+ $('#rStats').innerHTML=sent.has(rsi)?stats(r):'Simula el envío para ver resultados.'}
+function stats(r){const lab=['Enviados','Entregados','Abiertos','Acción'];return lab.map((l,i)=>`<div class="hb" style="grid-template-columns:80px 1fr 40px"><span>${l}</span><div class="tr"><i style="width:${r.st[i]}%;background:${['#13315C','#00A6A6','#2A9D5C','#F2A541'][i]}"></i></div><b>${r.st[i]}%</b></div>`).join('')}
+function sendStage(){const r=RS[rsi];r.ch.forEach((c,j)=>setTimeout(()=>{$('#thread').insertAdjacentHTML('beforeend',`<div class="bub ${c[0]==='SMS'?'sms':''}"><span class="chan" style="background:${c[1]}">${c[0]}</span><br>${c[0]==='Coordinador'?'Alerta al coordinador de puesto: Laura M. (Mesa 012) con evaluación pendiente.':r.msg}${c[0]==='Coordinador'?'':`<span class="cta">${r.cta} →</span>`}<div class="meta">${['7:02','7:03','10:15'][j]} ✓✓</div></div>`);$('#thread').scrollTop=1e6},j*700));
+ setTimeout(()=>{sent.add(rsi);renderRem();toast('Etapa “'+r.t+'” enviada')},r.ch.length*700)}
+
+/* ================= TABLERO ================= */
+const DEPF={'Nacional':1,'Antioquia':.13,'Bogotá D.C.':.16,'Nariño':.04,'Vaupés':.002};
+function renderDash(){const d=$('#fDep').value,r=$('#fRol').value,f=DEPF[d]*(r==='Todos los roles'?1:r==='Jurados'?.82:r==='Delegados'?.03:.15),q=d==='Vaupés'?-.14:d==='Nariño'?-.07:d==='Bogotá D.C.'?.04:0;
+ const fmt=x=>Math.round(x).toLocaleString('es-CO'),pc=x=>(Math.max(30,Math.min(99,x))).toFixed(1).replace('.',',')+'%';
+ $('#kpis').innerHTML=[['Designados',fmt(712480*f),'100% con ruta asignada',''],['Asistencia a la capacitación',pc(86.4+q*100),'▲ 3,2 pts semana',''],['Actas simuladas',fmt(1034500*f),'1,45 por participante',''],['Actas sin error (1.er intento)',pc(71.8+q*100),q<0?'▼ bajo la meta (75%)':'▲ 5,1 pts',q<0?'dn':''],['Asistentes en vivo',fmt(148900*f),'412 sesiones emitidas','']].map(k=>`<div class="kpi"><span>${k[0]}</span><b>${k[1]}</b><em class="${k[3]}">${k[2]}</em></div>`).join('');
+ const E=[['Casilla en cero escrita como "0"',31],['Diferencias entre ejemplares',24],['Suma no coincide con el total',18],['Votos destruidos sin registrar',14],['Firmas incompletas',9],['Voto nulo clasificado como válido',4]];
+ $('#errs').innerHTML=E.map((e,i)=>{const v=Math.max(2,Math.round(e[1]*(1-q*1.5)));return `<div class="hb" style="grid-template-columns:230px 1fr 40px"><span>${e[0]}</span><div class="tr"><i style="width:${v*3}%;background:${i<2?'var(--red)':'var(--navy)'}"></i></div><b>${v}%</b></div>`}).join('');
+ const F=[['Enviados',100,'#13315C'],['Entregados',94,'#1d5a8a'],['Abiertos',77,'#00A6A6'],['Completaron pendiente',58+Math.round(q*60),'#2A9D5C'],['Escalados a coordinador',12-Math.round(q*40),'#D1495B']];
+ $('#fun').innerHTML=F.map(x=>`<div style="width:${Math.max(50,x[1])}%;background:${x[2]}"><span>${x[0]}</span><span>${x[1]}%</span></div>`).join('');
+ const pts=[38,52,47,61,70,66,82,91,88,100].map((v,i)=>v*(1+q)*1000*f);const W=520,H=170,mx=Math.max(...pts)*1.08;const lab=g=>g>=1000?Math.round(g/1000)+'k':Math.round(g);const xy=pts.map((v,i)=>[30+i*(W-50)/9,H-10-v/mx*(H-30)]);
+ $('#area').innerHTML=`${[0,mx/2,mx].map(g=>`<line x1="30" x2="${W-20}" y1="${H-10-g/mx*(H-30)}" y2="${H-10-g/mx*(H-30)}" stroke="#EEF2F7"/><text x="0" y="${H-6-g/mx*(H-30)}" font-size="10" fill="#8A96A8">${lab(g)}</text>`).join('')}<path d="M${xy.map(p=>p.join(',')).join(' L')} L${xy[9][0]},${H-10} L30,${H-10}Z" fill="#E0F5F5"/><path d="M${xy.map(p=>p.join(',')).join(' L')}" fill="none" stroke="#00A6A6" stroke-width="2.5"/>${xy.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#fff" stroke="#00A6A6" stroke-width="2"><title>Día ${i+1}: ${Math.round(pts[i]).toLocaleString('es-CO')} asistentes</title></circle><text x="${p[0]}" y="${H+8}" font-size="9" fill="#8A96A8" text-anchor="middle">${14+i}/10</text>`).join('')}`;
+ const M=d==='Nacional'?[['Medellín',94,'g'],['Bogotá D.C.',92,'g'],['Pasto',81,'a'],['Quibdó',66,'r'],['Mitú',61,'r']]:[[d==='Vaupés'?'Mitú':d==='Nariño'?'Pasto':d==='Antioquia'?'Medellín':'Suba',88+q*80,q<0?'a':'g'],[d==='Vaupés'?'Carurú':d==='Nariño'?'Tumaco':d==='Antioquia'?'Turbo':'Kennedy',72+q*80,q<0?'r':'a'],[d==='Vaupés'?'Taraira':d==='Nariño'?'Ipiales':d==='Antioquia'?'Envigado':'Usaquén',90+q*40,'g']];
+ const col={g:'#2A9D5C',a:'#F2A541',r:'#D1495B'};
+ $('#mun').innerHTML='<tr><th>Municipio</th><th>Asistencia</th><th>Mesas en riesgo</th><th>Acción</th></tr>'+M.map(m=>`<tr><td><span class="sem" style="background:${col[m[2]]}"></span>${m[0]}</td><td>${Math.round(Math.min(99,m[1]))}%</td><td>${m[2]==='r'?Math.round(40+Math.random()*30):m[2]==='a'?Math.round(8+Math.random()*10):Math.round(Math.random()*4)}</td><td>${m[2]==='g'?'<span class="chip g">OK</span>':`<button class="btn sm ${m[2]==='r'?'':'ghost'}" onclick="this.textContent='✓ Programado';toast('Clase en vivo y recordatorios programados para ${m[0]}')">${m[2]==='r'?'Activar plan':'Recordar'}</button>`}</td></tr>`).join('')}
+
+/* ================= ROUTER ================= */
+const V={simulador:['Aprendizaje','Simulador interactivo de actas'],envivo:['Aprendizaje','Clases en vivo'],certificado:['Aprendizaje','Certificado de asistencia'],recordatorios:['Gestión','Recordatorios escalonados'],tablero:['Gestión','Tablero de gestión y control']};
+function go(v){location.hash=v}
+function show(){let v=location.hash.slice(1);if(!V[v])v='simulador';Object.keys(V).forEach(k=>$('#v-'+k).classList.toggle('hide',k!==v));$$('aside a').forEach(a=>a.classList.toggle('on',a.dataset.v===v));
+ $('#crumb').textContent=V[v][0];$('#ttl').textContent=V[v][1];const adm=V[v][0]==='Gestión';$('#who').textContent=adm?'Coordinación nacional':'Laura Martínez';$('#whorole').textContent=adm?'Registraduría · Capacitación':'Elaboradora de actas · Mesa 012';$('#av').textContent=adm?'CN':'LM';
+ clearInterval(liveT);if(v==='envivo')startLive();if(v==='certificado')renderQR();if(v==='recordatorios')renderRem();if(v==='tablero')renderDash();window.scrollTo(0,0)}
+window.addEventListener('hashchange',show);resetSim();show();
+</script>
+</body>
+</html>
